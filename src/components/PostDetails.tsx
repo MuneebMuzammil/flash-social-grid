@@ -57,7 +57,7 @@ const PostDetails = () => {
       .from('posts')
       .select(`
         *,
-        profiles:user_id (username, avatar_url)
+        profiles!inner(username, avatar_url)
       `)
       .eq('id', postId)
       .single();
@@ -79,7 +79,7 @@ const PostDetails = () => {
       .from('comments')
       .select(`
         *,
-        profiles:user_id (username, avatar_url)
+        profiles!inner(username, avatar_url)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });

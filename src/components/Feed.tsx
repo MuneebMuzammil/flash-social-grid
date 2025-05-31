@@ -90,13 +90,12 @@ const Feed = () => {
         .from('posts')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles!inner(username, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching posts:', error);
-        // Use dummy data if there's an error or no posts
         setPosts(dummyPosts);
       } else {
         // If no real posts exist, use dummy data

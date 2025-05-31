@@ -34,7 +34,7 @@ const Stories = () => {
         .from('stories')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles!inner(username, avatar_url)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });

@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Story {
   id: string;
@@ -11,14 +12,61 @@ interface Story {
 }
 
 const Stories = () => {
-  const stories: Story[] = [
+  const [stories, setStories] = useState<Story[]>([]);
+
+  // Fallback dummy data
+  const dummyStories: Story[] = [
     { id: '1', username: 'Your Story', hasStory: false },
-    { id: '2', username: 'john_doe', hasStory: true, isViewed: false },
-    { id: '3', username: 'jane_smith', hasStory: true, isViewed: true },
-    { id: '4', username: 'travel_diary', hasStory: true, isViewed: false },
-    { id: '5', username: 'food_lover', hasStory: true, isViewed: true },
+    { id: '2', username: 'john_doe', hasStory: true, isViewed: false, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
+    { id: '3', username: 'jane_smith', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5c8?w=150&h=150&fit=crop&crop=face' },
+    { id: '4', username: 'travel_diary', hasStory: true, isViewed: false, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' },
+    { id: '5', username: 'food_lover', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face' },
     { id: '6', username: 'tech_news', hasStory: true, isViewed: false },
   ];
+
+  useEffect(() => {
+    fetchStories();
+  }, []);
+
+  const fetchStories = async () => {
+    try {
+      const { data: storiesData, error } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching stories:', error);
+        setStories(dummyStories);
+        return;
+      }
+
+      if (storiesData && storiesData.length > 0) {
+        const formattedStories = storiesData.map(story => ({
+          id: story.id,
+          username: story.profiles?.username || 'Unknown',
+          avatar: story.profiles?.avatar_url,
+          hasStory: true,
+          isViewed: Math.random() > 0.5 // Random for demo
+        }));
+        
+        // Add "Your Story" at the beginning
+        setStories([
+          { id: 'your-story', username: 'Your Story', hasStory: false },
+          ...formattedStories
+        ]);
+      } else {
+        setStories(dummyStories);
+      }
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+      setStories(dummyStories);
+    }
+  };
 
   return (
     <div className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-4">

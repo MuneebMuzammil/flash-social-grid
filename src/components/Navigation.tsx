@@ -1,9 +1,24 @@
 
 import React from 'react';
-import { Home, Search, User, MessageSquare, Camera } from 'lucide-react';
+import { Home, Search, User, MessageSquare, Camera, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navigation = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signOut } = useAuth();
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   return (
     <>
       {/* Top Navigation */}
@@ -34,17 +49,42 @@ const Navigation = () => {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="hover:scale-105 transition-transform">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:scale-105 transition-transform"
+                onClick={() => navigate('/camera')}
+              >
                 <Camera className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="hover:scale-105 transition-transform">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:scale-105 transition-transform"
+                onClick={() => navigate('/messages')}
+              >
                 <MessageSquare className="w-5 h-5" />
               </Button>
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full p-0.5">
-                <div className="w-full h-full bg-white dark:bg-gray-900 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:scale-105 transition-transform"
+                onClick={() => navigate('/profile')}
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full p-0.5">
+                  <div className="w-full h-full bg-white dark:bg-gray-900 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
                 </div>
-              </div>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:scale-105 transition-transform"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -54,21 +94,22 @@ const Navigation = () => {
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-around py-2 px-4">
           {[
-            { icon: Home, label: 'Home', active: true },
-            { icon: Search, label: 'Search' },
-            { icon: Camera, label: 'Create' },
-            { icon: MessageSquare, label: 'Messages' },
-            { icon: User, label: 'Profile' }
-          ].map(({ icon: Icon, label, active }) => (
+            { icon: Home, label: 'Home', path: '/' },
+            { icon: Search, label: 'Search', path: '/search' },
+            { icon: Camera, label: 'Create', path: '/camera' },
+            { icon: MessageSquare, label: 'Messages', path: '/messages' },
+            { icon: User, label: 'Profile', path: '/profile' }
+          ].map(({ icon: Icon, label, path }) => (
             <Button
               key={label}
               variant="ghost"
               size="icon"
               className={`flex flex-col items-center justify-center h-12 w-12 rounded-lg transition-all ${
-                active 
+                location.pathname === path
                   ? 'text-instagram-purple scale-105' 
                   : 'text-gray-600 dark:text-gray-400 hover:text-instagram-purple hover:scale-105'
               }`}
+              onClick={() => handleNavigation(path)}
             >
               <Icon className="w-5 h-5" />
             </Button>

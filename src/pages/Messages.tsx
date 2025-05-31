@@ -73,18 +73,53 @@ const Messages = () => {
   const fetchMessages = async (userId: string) => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from('messages')
-      .select(`
-        *,
-        sender_profile:profiles!messages_sender_id_fkey(username, avatar_url)
-      `)
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order('created_at', { ascending: true });
+    try {
+      // Get messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .order('created_at', { ascending: true });
 
-    if (data) {
-      setMessages(data);
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        return;
+      }
+
+      if (messagesData && messagesData.length > 0) {
+        // Get unique sender IDs
+        const senderIds = [...new Set(messagesData.map(message => message.sender_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', senderIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          setMessages([]);
+        } else {
+          // Create a map of user_id to profile
+          const profileMap = new Map();
+          profilesData?.forEach(profile => {
+            profileMap.set(profile.id, profile);
+          });
+
+          // Combine messages with profiles
+          const messagesWithProfiles = messagesData.map(message => ({
+            ...message,
+            sender_profile: profileMap.get(message.sender_id) || { username: 'Unknown User', avatar_url: null }
+          }));
+
+          setMessages(messagesWithProfiles);
+        }
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   };
 

@@ -30,35 +30,57 @@ const Stories = () => {
 
   const fetchStories = async () => {
     try {
-      const { data: storiesData, error } = await supabase
+      // Get stories
+      const { data: storiesData, error: storiesError } = await supabase
         .from('stories')
-        .select(`
-          *,
-          profiles!inner(username, avatar_url)
-        `)
+        .select('*')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching stories:', error);
+      if (storiesError) {
+        console.error('Error fetching stories:', storiesError);
         setStories(dummyStories);
         return;
       }
 
       if (storiesData && storiesData.length > 0) {
-        const formattedStories = storiesData.map(story => ({
-          id: story.id,
-          username: story.profiles?.username || 'Unknown',
-          avatar: story.profiles?.avatar_url,
-          hasStory: true,
-          isViewed: Math.random() > 0.5 // Random for demo
-        }));
+        // Get unique user IDs
+        const userIds = [...new Set(storiesData.map(story => story.user_id))];
         
-        // Add "Your Story" at the beginning
-        setStories([
-          { id: 'your-story', username: 'Your Story', hasStory: false },
-          ...formattedStories
-        ]);
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          setStories(dummyStories);
+        } else {
+          // Create a map of user_id to profile
+          const profileMap = new Map();
+          profilesData?.forEach(profile => {
+            profileMap.set(profile.id, profile);
+          });
+
+          // Combine stories with profiles
+          const formattedStories = storiesData.map(story => {
+            const profile = profileMap.get(story.user_id);
+            return {
+              id: story.id,
+              username: profile?.username || 'Unknown',
+              avatar: profile?.avatar_url,
+              hasStory: true,
+              isViewed: Math.random() > 0.5 // Random for demo
+            };
+          });
+          
+          // Add "Your Story" at the beginning
+          setStories([
+            { id: 'your-story', username: 'Your Story', hasStory: false },
+            ...formattedStories
+          ]);
+        }
       } else {
         setStories(dummyStories);
       }

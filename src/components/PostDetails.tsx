@@ -53,41 +53,96 @@ const PostDetails = () => {
   }, [postId, user]);
 
   const fetchPost = async () => {
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles!inner(username, avatar_url)
-      `)
-      .eq('id', postId)
-      .single();
+    try {
+      // First get the post
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', postId)
+        .single();
 
-    if (error) {
+      if (postError) {
+        console.error('Error fetching post:', postError);
+        toast({
+          title: "Error",
+          description: "Failed to load post",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Then get the profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', postData.user_id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
+
+      setPost({
+        ...postData,
+        profiles: profileData || { username: 'Unknown User', avatar_url: null }
+      });
+    } catch (error) {
       console.error('Error fetching post:', error);
       toast({
         title: "Error",
         description: "Failed to load post",
         variant: "destructive"
       });
-    } else {
-      setPost(data);
     }
   };
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from('comments')
-      .select(`
-        *,
-        profiles!inner(username, avatar_url)
-      `)
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true });
+    try {
+      // Get comments
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
 
-    if (error) {
+      if (commentsError) {
+        console.error('Error fetching comments:', commentsError);
+        return;
+      }
+
+      if (commentsData && commentsData.length > 0) {
+        // Get unique user IDs
+        const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          setComments([]);
+        } else {
+          // Create a map of user_id to profile
+          const profileMap = new Map();
+          profilesData?.forEach(profile => {
+            profileMap.set(profile.id, profile);
+          });
+
+          // Combine comments with profiles
+          const commentsWithProfiles = commentsData.map(comment => ({
+            ...comment,
+            profiles: profileMap.get(comment.user_id) || { username: 'Unknown User', avatar_url: null }
+          }));
+
+          setComments(commentsWithProfiles);
+        }
+      } else {
+        setComments([]);
+      }
+    } catch (error) {
       console.error('Error fetching comments:', error);
-    } else {
-      setComments(data || []);
     }
   };
 

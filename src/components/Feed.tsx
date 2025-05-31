@@ -86,20 +86,49 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      // First get posts
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!inner(username, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching posts:', error);
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
         setPosts(dummyPosts);
+        setLoading(false);
+        return;
+      }
+
+      if (postsData && postsData.length > 0) {
+        // Get unique user IDs
+        const userIds = [...new Set(postsData.map(post => post.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          setPosts(dummyPosts);
+        } else {
+          // Create a map of user_id to profile
+          const profileMap = new Map();
+          profilesData?.forEach(profile => {
+            profileMap.set(profile.id, profile);
+          });
+
+          // Combine posts with profiles
+          const postsWithProfiles = postsData.map(post => ({
+            ...post,
+            profiles: profileMap.get(post.user_id) || { username: 'Unknown User', avatar_url: null }
+          }));
+
+          setPosts(postsWithProfiles);
+        }
       } else {
-        // If no real posts exist, use dummy data
-        setPosts(data && data.length > 0 ? data : dummyPosts);
+        setPosts(dummyPosts);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);

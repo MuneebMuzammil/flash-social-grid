@@ -1,73 +1,107 @@
-# Welcome to your Lovable project
+# Flash Social Grid
 
-## Project info
+A modern social grid application built with React, TypeScript, and Tailwind CSS. This project allows users to create, view, and interact with a dynamic grid of social content.
 
-**URL**: https://lovable.dev/projects/0a6cef57-b574-4d53-b209-1f618b7cade4
+## Project Structure
 
-## How can I edit this code?
+flash-social-grid
+├── public/ # Static assets
+├── src/ # Source code
+│ ├── components/ # Reusable components
+│ ├── hooks/ # Custom React hooks
+│ ├── integrations/ # Third-party integrations
+│ ├── lib/ # Utility functions
+│ ├── pages/ # Page components
+│ ├── App.tsx # Main application component
+│ ├── main.tsx # Entry point
+│ └── index.css # Global styles
+├── supabase/ # Supabase configuration
+├── .env # Environment variables
+├── .gitignore # Git ignore rules
+├── package.json # Project dependencies
+├── README.md # Project documentation
+└── vite.config.ts # Vite configuration
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Responsive Design**: Built with Tailwind CSS for a fully responsive layout.
+- **Dynamic Content**: Easily manage and display social content in a grid format.
+- **Supabase Integration**: Backed by Supabase for real-time data management.
+- **Custom UI Components**: Utilizes `shadcn/ui` for pre-built, customizable components.
+- **React Router**: Seamless navigation between pages with React Router.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0a6cef57-b574-4d53-b209-1f618b7cade4) and start prompting.
+## Technologies Used
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **State Management**: React Query
+- **Form Handling**: React Hook Form
+- **Routing**: React Router
+- **UI Components**: Radix UI, `shadcn/ui`
+- **Backend**: Supabase
+- **Build Tool**: Vite
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (v18 or higher)
+- npm or yarn
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/flash-social-grid.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd flash-social-grid
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Running the Project
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+2. Open your browser and navigate to `http://localhost:5173`.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Building for Production
+
+To build the project for production, run:
+```bash
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+The production-ready files will be generated in the `dist` directory.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+## Contributing
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Contributions are welcome! If you'd like to contribute, please follow these steps:
 
-## What technologies are used for this project?
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Commit your changes.
+4. Push your branch and open a pull request.
 
-This project is built with:
+## License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## How can I deploy this project?
+## Acknowledgments
 
-Simply open [Lovable](https://lovable.dev/projects/0a6cef57-b574-4d53-b209-1f618b7cade4) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- [Tailwind CSS](https://tailwindcss.com/) for the utility-first CSS framework.
+- [Supabase](https://supabase.com/) for the backend services.
+- [Radix UI](https://www.radix-ui.com/) for accessible UI primitives.
+- [React](https://reactjs.org/) for the frontend library.

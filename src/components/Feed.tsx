@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PostCard from './PostCard';
 import Stories from './Stories';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,9 +21,7 @@ interface Post {
 const Feed = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  // Fallback dummy data for when there are no real posts
   const dummyPosts = [
     {
       id: 'dummy-1',
@@ -36,12 +33,12 @@ const Feed = () => {
       user_id: 'dummy-user-1',
       profiles: {
         username: 'travel_diary',
-        avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+        avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop'
       }
     },
     {
       id: 'dummy-2',
-      image_url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=400&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?q=80&w=2020&auto=format&fit=crop',
       caption: 'Homemade pizza night! 🍕 Recipe in bio #cooking #foodie',
       likes_count: 1203,
       comments_count: 89,
@@ -49,7 +46,7 @@ const Feed = () => {
       user_id: 'dummy-user-2',
       profiles: {
         username: 'food_lover',
-        avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b5c8?w=150&h=150&fit=crop&crop=face'
+        avatar_url: 'https://images.unsplash.com/photo-1619524537696-3309f8843e92?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
       }
     },
     {
@@ -86,7 +83,6 @@ const Feed = () => {
 
   const fetchPosts = async () => {
     try {
-      // First get posts
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('*')
@@ -100,10 +96,7 @@ const Feed = () => {
       }
 
       if (postsData && postsData.length > 0) {
-        // Get unique user IDs
         const userIds = [...new Set(postsData.map(post => post.user_id))];
-        
-        // Fetch profiles for these users
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
@@ -113,13 +106,11 @@ const Feed = () => {
           console.error('Error fetching profiles:', profilesError);
           setPosts(dummyPosts);
         } else {
-          // Create a map of user_id to profile
           const profileMap = new Map();
           profilesData?.forEach(profile => {
             profileMap.set(profile.id, profile);
           });
 
-          // Combine posts with profiles
           const postsWithProfiles = postsData.map(post => ({
             ...post,
             profiles: profileMap.get(post.user_id) || { username: 'Unknown User', avatar_url: null }
@@ -136,10 +127,6 @@ const Feed = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePostClick = (postId: string) => {
-    navigate(`/post/${postId}`);
   };
 
   if (loading) {
@@ -161,16 +148,16 @@ const Feed = () => {
         <Stories />
         <div className="max-w-md mx-auto px-4 py-6 space-y-6">
           {posts.map((post) => (
-            <div key={post.id} onClick={() => handlePostClick(post.id)} className="cursor-pointer">
-              <PostCard
-                username={post.profiles?.username || 'Unknown User'}
-                userAvatar={post.profiles?.avatar_url}
-                postImage={post.image_url}
-                caption={post.caption}
-                likes={post.likes_count}
-                timeAgo={getTimeAgo(post.created_at)}
-              />
-            </div>
+            <PostCard
+              key={post.id}
+              id={post.id}
+              username={post.profiles?.username || 'Unknown User'}
+              userAvatar={post.profiles?.avatar_url}
+              postImage={post.image_url}
+              caption={post.caption}
+              likes={post.likes_count}
+              timeAgo={getTimeAgo(post.created_at)}
+            />
           ))}
         </div>
       </div>
@@ -182,7 +169,7 @@ const getTimeAgo = (dateString: string) => {
   const now = new Date();
   const postDate = new Date(dateString);
   const diffInHours = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60));
-  
+
   if (diffInHours < 1) return 'Just now';
   if (diffInHours < 24) return `${diffInHours}h`;
   const diffInDays = Math.floor(diffInHours / 24);

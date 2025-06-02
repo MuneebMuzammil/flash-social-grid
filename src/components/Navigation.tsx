@@ -4,6 +4,7 @@ import { Home, Search, User, MessageSquare, Camera, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -30,9 +31,11 @@ const Navigation = () => {
               <div className="w-8 h-8 bg-instagram-gradient rounded-lg flex items-center justify-center">
                 <Camera className="w-5 h-5 text-white" />
               </div>
+              <Link to="/">
               <h1 className="text-xl font-bold bg-instagram-gradient bg-clip-text text-transparent">
                 SocialApp
               </h1>
+              </Link>
             </div>
 
             {/* Search Bar - Hidden on mobile */}

@@ -11,17 +11,18 @@ interface Story {
   isViewed?: boolean;
 }
 
+const fallbackAvatar = 'https://ui-avatars.com/api/?name=User&background=333&color=fff';
+
 const Stories = () => {
   const [stories, setStories] = useState<Story[]>([]);
 
-  // Fallback dummy data
   const dummyStories: Story[] = [
-    { id: '1', username: 'Your Story', hasStory: false },
+    { id: 'your-story', username: 'Your Story', hasStory: false, avatar: fallbackAvatar },
     { id: '2', username: 'john_doe', hasStory: true, isViewed: false, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face' },
-    { id: '3', username: 'jane_smith', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5c8?w=150&h=150&fit=crop&crop=face' },
-    { id: '4', username: 'travel_diary', hasStory: true, isViewed: false, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face' },
-    { id: '5', username: 'food_lover', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face' },
-    { id: '6', username: 'tech_news', hasStory: true, isViewed: false },
+    { id: '3', username: 'jane_smith', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1656338997878-279d71d48f6e?q=80&w=1964&auto=format&fit=crop' },
+    { id: '4', username: 'travel_diary', hasStory: true, isViewed: false, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop' },
+    { id: '5', username: 'food_lover', hasStory: true, isViewed: true, avatar: 'https://images.unsplash.com/photo-1619524537696-3309f8843e92?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' },
+    { id: '6', username: 'tech_news', hasStory: true, isViewed: false, avatar: fallbackAvatar },
   ];
 
   useEffect(() => {
@@ -30,84 +31,75 @@ const Stories = () => {
 
   const fetchStories = async () => {
     try {
-      // Get stories
       const { data: storiesData, error: storiesError } = await supabase
         .from('stories')
         .select('*')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (storiesError) {
-        console.error('Error fetching stories:', storiesError);
+      if (storiesError || !storiesData?.length) {
         setStories(dummyStories);
         return;
       }
 
-      if (storiesData && storiesData.length > 0) {
-        // Get unique user IDs
-        const userIds = [...new Set(storiesData.map(story => story.user_id))];
-        
-        // Fetch profiles for these users
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds);
+      const userIds = [...new Set(storiesData.map((story) => story.user_id))];
 
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-          setStories(dummyStories);
-        } else {
-          // Create a map of user_id to profile
-          const profileMap = new Map();
-          profilesData?.forEach(profile => {
-            profileMap.set(profile.id, profile);
-          });
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
 
-          // Combine stories with profiles
-          const formattedStories = storiesData.map(story => {
-            const profile = profileMap.get(story.user_id);
-            return {
-              id: story.id,
-              username: profile?.username || 'Unknown',
-              avatar: profile?.avatar_url,
-              hasStory: true,
-              isViewed: Math.random() > 0.5 // Random for demo
-            };
-          });
-          
-          // Add "Your Story" at the beginning
-          setStories([
-            { id: 'your-story', username: 'Your Story', hasStory: false },
-            ...formattedStories
-          ]);
-        }
-      } else {
+      if (profilesError || !profilesData) {
         setStories(dummyStories);
+        return;
       }
+
+      const profileMap = new Map();
+      profilesData.forEach((profile) => {
+        profileMap.set(profile.id, profile);
+      });
+
+      const formattedStories = storiesData.map((story) => {
+        const profile = profileMap.get(story.user_id);
+        return {
+          id: story.id,
+          username: profile?.username || 'Unknown',
+          avatar: profile?.avatar_url || fallbackAvatar,
+          hasStory: true,
+          isViewed: Math.random() > 0.5,
+        };
+      });
+
+      setStories([
+        { id: 'your-story', username: 'Your Story', hasStory: false, avatar: fallbackAvatar },
+        ...formattedStories,
+      ]);
     } catch (error) {
-      console.error('Error fetching stories:', error);
+      console.error('Unexpected error:', error);
       setStories(dummyStories);
     }
   };
 
   return (
-    <div className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-4">
+    <div className="w-full bg-black text-white border-b border-gray-800 py-4">
       <div className="max-w-md mx-auto px-4">
         <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
           {stories.map((story) => (
             <div key={story.id} className="flex flex-col items-center space-y-1 min-w-[70px]">
               <div
-                className={`w-16 h-16 rounded-full p-0.5 ${
-                  story.hasStory
-                    ? story.isViewed
-                      ? 'bg-gray-300 dark:bg-gray-600'
-                      : 'bg-story-gradient'
-                    : 'bg-gray-200 dark:bg-gray-700'
+                className={`w-16 h-16 rounded-full p-[2px] ${
+                  story.id === 'your-story'
+                    ? 'bg-gray-700'
+                    : 'bg-gradient-to-tr from-pink-500 to-yellow-500 animate-spin-slow'
                 } hover:scale-105 transition-transform cursor-pointer`}
               >
-                <div className="w-full h-full bg-white dark:bg-gray-900 rounded-full flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full bg-black rounded-full flex items-center justify-center overflow-hidden">
                   {story.avatar ? (
-                    <img src={story.avatar} alt={story.username} className="w-full h-full object-cover" />
+                    <img
+                      src={story.avatar}
+                      alt={story.username}
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   ) : (
                     <User className="w-8 h-8 text-gray-400" />
                   )}
